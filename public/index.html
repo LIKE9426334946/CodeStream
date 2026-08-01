@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f3f5f0">
+    <meta name="description" content="CodeStream 个人代码流程复习工具">
+    <title>CodeStream · 代码流复习</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="study-page">
+    <div class="study-shell">
+      <header class="study-header">
+        <button class="icon-button mobile-back" id="backButton" type="button" aria-label="返回代码流列表" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <a class="brand" href="/" aria-label="CodeStream 首页">
+          <span class="brand-mark">&lt;/&gt;</span>
+          <span>CodeStream</span>
+        </a>
+        <div class="header-actions">
+          <button class="icon-button" id="refreshButton" type="button" aria-label="刷新内容" title="刷新内容">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8.1 8.1 0 1 0 2 5.3M20 4v7h-7"/></svg>
+          </button>
+          <a class="text-link desktop-only" href="/admin">管理内容</a>
+        </div>
+      </header>
+
+      <main class="study-layout" aria-live="polite">
+        <aside class="directory-panel" id="directoryPanel">
+          <div class="panel-heading desktop-only">
+            <p class="eyebrow">LIBRARY</p>
+            <h1>复习目录</h1>
+          </div>
+          <nav class="directory-list" id="directoryList" aria-label="代码目录"></nav>
+        </aside>
+
+        <section class="stream-panel" id="streamPanel">
+          <div class="stream-panel-top">
+            <div>
+              <p class="eyebrow" id="directoryEyebrow">CODE FLOWS</p>
+              <h1 id="directoryTitle">代码流</h1>
+              <p class="section-description" id="directoryDescription"></p>
+            </div>
+            <label class="search-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <span class="sr-only">搜索代码流</span>
+              <input id="searchInput" type="search" placeholder="搜索代码流或内容" autocomplete="off">
+            </label>
+          </div>
+          <div class="stream-list" id="streamList"></div>
+        </section>
+
+        <article class="reader-panel" id="readerPanel" hidden>
+          <div class="reader-heading">
+            <div>
+              <p class="reader-path" id="readerPath"></p>
+              <h1 id="readerTitle"></h1>
+              <p id="readerDescription"></p>
+            </div>
+            <span class="step-count" id="stepCount"></span>
+          </div>
+          <div class="flow-line" id="flowBlocks"></div>
+        </article>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

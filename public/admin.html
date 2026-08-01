@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f5f0">
+    <meta name="description" content="CodeStream 内容管理">
+    <title>CodeStream · 内容管理</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="admin-page">
+    <header class="admin-header">
+      <a class="brand" href="/">
+        <span class="brand-mark">&lt;/&gt;</span>
+        <span>CodeStream</span>
+      </a>
+      <div class="admin-title">
+        <strong>内容管理</strong>
+        <span id="saveStatus">正在载入…</span>
+      </div>
+      <div class="header-actions">
+        <button class="secondary-button" id="importButton" type="button">导入备份</button>
+        <button class="secondary-button" id="exportButton" type="button">下载备份</button>
+        <a class="primary-button" href="/">打开学习页</a>
+        <input id="importInput" type="file" accept="application/json,.json" hidden>
+      </div>
+    </header>
+
+    <main class="admin-layout">
+      <section class="admin-column directory-admin">
+        <div class="admin-column-heading">
+          <div>
+            <p class="eyebrow">01 · DIRECTORY</p>
+            <h1>目录</h1>
+          </div>
+          <button class="round-add" id="addDirectoryButton" type="button" aria-label="新增目录">+</button>
+        </div>
+        <p class="drag-hint">拖动左侧手柄调整顺序</p>
+        <div class="sortable-list" id="adminDirectoryList"></div>
+      </section>
+
+      <section class="admin-column stream-admin">
+        <div class="admin-column-heading">
+          <div>
+            <p class="eyebrow">02 · CODE FLOW</p>
+            <h1 id="adminStreamTitle">代码流</h1>
+          </div>
+          <button class="round-add" id="addStreamButton" type="button" aria-label="新增代码流">+</button>
+        </div>
+        <p class="drag-hint">只显示当前目录，拖动手柄调整顺序</p>
+        <div class="sortable-list" id="adminStreamList"></div>
+      </section>
+
+      <section class="admin-column block-admin">
+        <div class="admin-column-heading block-heading">
+          <div>
+            <p class="eyebrow">03 · CONTENT</p>
+            <h1 id="adminBlockTitle">选择代码流</h1>
+            <p id="adminBlockDescription"></p>
+          </div>
+          <div class="block-actions">
+            <button class="secondary-button" id="editStreamButton" type="button">修改信息</button>
+            <button class="primary-button" id="addBlockButton" type="button">新增步骤</button>
+          </div>
+        </div>
+        <p class="drag-hint">代码和说明可以混合排列，保存后手机端立即可刷新查看</p>
+        <div class="sortable-list block-sortable-list" id="adminBlockList"></div>
+      </section>
+    </main>
+
+    <dialog class="editor-dialog" id="editorDialog">
+      <form method="dialog" id="editorForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow" id="dialogEyebrow">EDIT</p>
+            <h2 id="dialogTitle">编辑内容</h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="关闭" type="submit">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div id="dialogFields"></div>
+        <div class="dialog-actions">
+          <button class="secondary-button" value="cancel" type="submit">取消</button>
+          <button class="primary-button" id="dialogSubmit" value="default" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/admin.js" defer></script>
+  </body>
+</html>

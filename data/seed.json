@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-01T00:00:00.000Z",
+  "directories": [
+    {
+      "id": "dir-bash",
+      "name": "Bash",
+      "description": "常用终端命令与服务器操作",
+      "streams": [
+        {
+          "id": "stream-git-update",
+          "name": "提交 Git 修改",
+          "description": "拉取代码、检查修改并推送到远程仓库",
+          "blocks": [
+            {
+              "id": "block-git-pull",
+              "type": "code",
+              "language": "bash",
+              "content": "git pull"
+            },
+            {
+              "id": "block-edit-note",
+              "type": "note",
+              "language": "",
+              "content": "修改代码"
+            },
+            {
+              "id": "block-git-status",
+              "type": "code",
+              "language": "bash",
+              "content": "git status"
+            },
+            {
+              "id": "block-git-add",
+              "type": "code",
+              "language": "bash",
+              "content": "git add ."
+            },
+            {
+              "id": "block-git-commit",
+              "type": "code",
+              "language": "bash",
+              "content": "git commit -m \"描述\""
+            },
+            {
+              "id": "block-git-push",
+              "type": "code",
+              "language": "bash",
+              "content": "git push"
+            }
+          ]
+        },
+        {
+          "id": "stream-systemd-restart",
+          "name": "更新 Node.js 服务",
+          "description": "拉取新代码并安全重启 systemd 服务",
+          "blocks": [
+            {
+              "id": "block-cd-project",
+              "type": "code",
+              "language": "bash",
+              "content": "cd /opt/CodeStream"
+            },
+            {
+              "id": "block-pull-main",
+              "type": "code",
+              "language": "bash",
+              "content": "git pull origin main"
+            },
+            {
+              "id": "block-install-production",
+              "type": "code",
+              "language": "bash",
+              "content": "npm ci --omit=dev"
+            },
+            {
+              "id": "block-restart-service",
+              "type": "code",
+              "language": "bash",
+              "content": "systemctl restart codestream"
+            },
+            {
+              "id": "block-check-service",
+              "type": "code",
+              "language": "bash",
+              "content": "systemctl status codestream --no-pager"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dir-python",
+      "name": "Python",
+      "description": "Python 开发和数据处理流程",
+      "streams": [
+        {
+          "id": "stream-python-venv",
+          "name": "创建虚拟环境",
+          "description": "为新项目建立并启用独立的 Python 环境",
+          "blocks": [
+            {
+              "id": "block-python-venv-create",
+              "type": "code",
+              "language": "bash",
+              "content": "python -m venv .venv"
+            },
+            {
+              "id": "block-python-venv-enable",
+              "type": "code",
+              "language": "bash",
+              "content": "source .venv/bin/activate"
+            },
+            {
+              "id": "block-python-pip-upgrade",
+              "type": "code",
+              "language": "bash",
+              "content": "python -m pip install --upgrade pip"
+            },
+            {
+              "id": "block-python-note",
+              "type": "note",
+              "language": "",
+              "content": "安装项目依赖后，可以用 pip freeze > requirements.txt 保存当前环境。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

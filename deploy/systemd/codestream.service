@@ -1,0 +1,21 @@
+[Unit]
+Description=CodeStream personal code flow review service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/CodeStream
+ExecStart=/usr/bin/node /opt/CodeStream/backend/server.js
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=3020
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=codestream
+
+[Install]
+WantedBy=multi-user.target

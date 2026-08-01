@@ -1,0 +1,8 @@
+node_modules/
+npm-debug.log*
+.DS_Store
+
+# Runtime data is created from data/seed.json on first start.
+data/content.json
+data/content.json.tmp
+data/content.json.backup
