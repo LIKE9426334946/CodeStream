@@ -676,6 +676,87 @@ svg {
   opacity: 1;
 }
 
+/* Login */
+.login-page {
+  overflow: hidden auto;
+}
+
+.login-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 32px 18px;
+}
+
+.login-card {
+  width: min(430px, 100%);
+  padding: clamp(28px, 6vw, 44px);
+  border: 1px solid rgba(207, 216, 208, 0.86);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 254, 250, 0.9);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.login-brand {
+  margin-bottom: 42px;
+}
+
+.login-heading h1 {
+  margin: 0;
+  font-size: clamp(28px, 7vw, 36px);
+  letter-spacing: -0.045em;
+}
+
+.login-heading > p:last-child {
+  margin: 12px 0 28px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.login-form .form-field {
+  margin-bottom: 18px;
+}
+
+.login-form .form-field input {
+  height: 50px;
+  font-size: 16px;
+}
+
+.login-error {
+  min-height: 20px;
+  margin: -3px 0 12px;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.login-form .login-submit {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 14px;
+  font-size: 15px;
+}
+
+.login-submit:disabled,
+.logout-button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.login-back {
+  display: block;
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.login-back:hover {
+  color: var(--accent-dark);
+}
+
 /* Admin */
 .admin-page {
   overflow-x: auto;

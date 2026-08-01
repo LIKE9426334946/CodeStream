@@ -1,11 +1,12 @@
 # CodeStream
 
-CodeStream 是一个个人使用的代码流程复习工具：手机端用于按目录阅读常用代码流，电脑端用于创建、修改和拖拽排序。它只展示代码，不会执行代码；内容保存在服务器本地 JSON 文件中，不使用数据库，也不包含登录或用户权限系统。
+CodeStream 是一个个人使用的代码流程复习工具：手机端用于按目录阅读常用代码流，电脑端登录后用于创建、修改和拖拽排序。它只展示代码，不会执行代码；内容保存在服务器本地 JSON 文件中，不使用数据库。
 
 ## 主要功能
 
-- 手机学习页：目录切换、代码流搜索、步骤式阅读、代码横向滚动、一键复制；学习内容优先读取浏览器缓存，只有目录主页的手动刷新按钮会请求服务器最新数据。
-- 电脑管理页：新增、修改、删除目录和代码流；添加代码或说明步骤；三级拖拽排序。
+- 手机学习页：目录切换、代码流搜索、步骤式阅读、代码横向滚动、合并查看；学习内容优先读取浏览器缓存，只有目录主页的手动刷新按钮会请求服务器最新数据。
+- 电脑管理页：固定账号登录；新增、修改、删除目录和代码流；添加代码或说明步骤；三级拖拽排序。
+- 管理保护：不提供注册和账号创建；管理页与数据写入接口均需登录，登录状态有效期为 30 天。
 - JSON 存储：首次启动从 `data/seed.json` 创建 `data/content.json`，保存时先校验，再原子替换并保留一个 `.backup` 备份。
 - 备份迁移：管理页可以下载完整 JSON，也可以导入 JSON 覆盖现有内容。
 - 单服务器部署：Node.js 只监听 `127.0.0.1:3020`，Nginx 对外监听 `16020`，systemd 保持服务运行。
@@ -22,17 +23,21 @@ CodeStream 是一个个人使用的代码流程复习工具：手机端用于按
 CodeStream/
 ├── backend/
 │   ├── data-store.js
+│   ├── auth.js
 │   └── server.js
 ├── data/
 │   └── seed.json
 ├── deploy/
 │   ├── nginx/codestream.conf
-│   └── systemd/codestream.service
+│   ├── systemd/codestream.service
+│   └── codestream.env.example
 ├── public/
 │   ├── admin.html
 │   ├── admin.js
 │   ├── app.js
 │   ├── index.html
+│   ├── login.html
+│   ├── login.js
 │   └── styles.css
 ├── tests/server.test.js
 ├── package.json
@@ -82,7 +87,20 @@ git pull origin main
 npm ci --omit=dev
 ```
 
-### 3. 创建 systemd 服务文件
+### 3. 创建私有登录配置
+
+登录密码和会话签名密钥不能提交到 GitHub。先从模板创建仅 root 可读的服务器配置：
+
+```bash
+cp /opt/CodeStream/deploy/codestream.env.example /etc/codestream.env
+chmod 600 /etc/codestream.env
+openssl rand -hex 32
+nano /etc/codestream.env
+```
+
+在 `/etc/codestream.env` 中保留固定用户名 `noart`，填写私有密码，并把 `openssl rand -hex 32` 的输出填入 `SESSION_SECRET`。当前使用 HTTP 访问时保留 `COOKIE_SECURE=false`；以后启用 HTTPS 后改为 `true`。本项目没有注册或创建其他账号的入口。
+
+### 4. 创建 systemd 服务文件
 
 项目已经提供完整配置，将它复制到系统目录：
 
@@ -103,6 +121,7 @@ ExecStart=/usr/bin/node /opt/CodeStream/backend/server.js
 Environment=NODE_ENV=production
 Environment=HOST=127.0.0.1
 Environment=PORT=3020
+EnvironmentFile=/etc/codestream.env
 Restart=always
 ```
 
@@ -114,7 +133,7 @@ curl http://127.0.0.1:3020/healthz
 
 正常结果应包含 `"status":"ok"`。
 
-### 4. 创建并启用 Nginx 配置
+### 5. 创建并启用 Nginx 配置
 
 完整配置文件位于 `deploy/nginx/codestream.conf`。复制、启用并测试：
 
@@ -128,7 +147,7 @@ systemctl reload nginx
 
 Nginx 会监听公网端口 `16020`，并将请求转发到只在本机监听的 Node.js 端口 `3020`。配置中已经包含真实 IP、转发协议和 WebSocket 所需的请求头。
 
-### 5. 放行公网端口
+### 6. 放行公网端口
 
 需要在云服务器安全组中放行 TCP `16020`。如果服务器启用了 UFW，再执行：
 
@@ -139,11 +158,11 @@ ufw status
 
 不需要向公网开放 `3020`，它仅供 Nginx 在服务器内部访问。
 
-### 6. 访问项目
+### 7. 访问项目
 
 ```text
 手机学习页：http://服务器公网IP:16020/
-电脑管理页：http://服务器公网IP:16020/admin
+电脑管理页：http://服务器公网IP:16020/admin（未登录会自动进入登录页）
 ```
 
 ## 日常更新
@@ -185,8 +204,11 @@ systemctl start codestream
 
 ```bash
 npm install
+export ADMIN_USERNAME=noart
+export ADMIN_PASSWORD=your-local-test-password
+export SESSION_SECRET=replace-with-at-least-32-random-characters
 npm test
 npm run dev
 ```
 
-默认开发地址为 `http://127.0.0.1:3020`。需要临时修改监听地址或端口时，可以设置 `HOST` 和 `PORT` 环境变量。
+默认开发地址为 `http://127.0.0.1:3020`。需要临时修改监听地址或端口时，可以设置 `HOST` 和 `PORT` 环境变量。不要把真实密码或 `SESSION_SECRET` 写入仓库文件。

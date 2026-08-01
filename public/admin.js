@@ -21,6 +21,7 @@ const elements = {
   exportButton: document.querySelector("#exportButton"),
   importButton: document.querySelector("#importButton"),
   importInput: document.querySelector("#importInput"),
+  logoutButton: document.querySelector("#logoutButton"),
   dialog: document.querySelector("#editorDialog"),
   dialogForm: document.querySelector("#editorForm"),
   dialogEyebrow: document.querySelector("#dialogEyebrow"),
@@ -30,6 +31,12 @@ const elements = {
 };
 
 let toastTimer;
+
+function handleExpiredSession(response) {
+  if (response.status !== 401) return false;
+  window.location.replace("/login");
+  return true;
+}
 
 function showToast(message) {
   window.clearTimeout(toastTimer);
@@ -494,6 +501,7 @@ function persist() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(snapshot)
     });
+    if (handleExpiredSession(response)) return;
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "保存失败");
     if (version === state.saveVersion) {
@@ -560,6 +568,7 @@ elements.importInput.addEventListener("change", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(imported)
     });
+    if (handleExpiredSession(response)) return;
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "导入失败");
     state.data = result;
@@ -571,6 +580,15 @@ elements.importInput.addEventListener("change", async () => {
   } catch (error) {
     console.error(error);
     showToast(`导入失败：${error.message}`);
+  }
+});
+
+elements.logoutButton.addEventListener("click", async () => {
+  elements.logoutButton.disabled = true;
+  try {
+    await fetch("/api/auth/logout", { method: "POST" });
+  } finally {
+    window.location.replace("/login");
   }
 });
 

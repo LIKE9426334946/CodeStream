@@ -1,5 +1,6 @@
 const path = require("node:path");
 const express = require("express");
+const { createAuth } = require("./auth");
 const { JsonStore } = require("./data-store");
 
 const projectRoot = path.resolve(__dirname, "..");
@@ -9,9 +10,17 @@ async function createApp(options = {}) {
   const seedFile = options.seedFile || path.join(projectRoot, "data", "seed.json");
   const store = options.store || new JsonStore({ dataFile, seedFile });
   await store.initialize();
+  const authOptions = options.auth || {};
+  const auth = createAuth({
+    username: authOptions.username || process.env.ADMIN_USERNAME || "noart",
+    password: authOptions.password || process.env.ADMIN_PASSWORD,
+    sessionSecret: authOptions.sessionSecret || process.env.SESSION_SECRET,
+    secureCookie: authOptions.secureCookie ?? process.env.COOKIE_SECURE === "true"
+  });
 
   const app = express();
   app.disable("x-powered-by");
+  app.set("trust proxy", "loopback");
   app.use(express.json({ limit: "5mb" }));
 
   app.get("/healthz", (_request, response) => {
@@ -27,7 +36,11 @@ async function createApp(options = {}) {
     }
   });
 
-  app.put("/api/data", async (request, response, next) => {
+  app.get("/api/auth/status", auth.status);
+  app.post("/api/auth/login", auth.login);
+  app.post("/api/auth/logout", auth.logout);
+
+  app.put("/api/data", auth.requireAdminApi, async (request, response, next) => {
     try {
       response.set("Cache-Control", "no-store");
       response.json(await store.write(request.body));
@@ -36,9 +49,19 @@ async function createApp(options = {}) {
     }
   });
 
-  app.get("/admin", (_request, response) => {
+  const sendLoginPage = (request, response) => {
+    response.set("Cache-Control", "no-store");
+    if (auth.isAuthenticated(request)) return response.redirect(302, "/admin");
+    return response.sendFile(path.join(projectRoot, "public", "login.html"));
+  };
+
+  const sendAdminPage = (_request, response) => {
+    response.set("Cache-Control", "no-store");
     response.sendFile(path.join(projectRoot, "public", "admin.html"));
-  });
+  };
+
+  app.get(["/login", "/login.html"], sendLoginPage);
+  app.get(["/admin", "/admin.html"], auth.requireAdminPage, sendAdminPage);
 
   app.use(express.static(path.join(projectRoot, "public"), {
     etag: true,

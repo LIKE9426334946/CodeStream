@@ -1,6 +1,8 @@
 node_modules/
 npm-debug.log*
 .DS_Store
+.env
+codestream.env
 
 # Runtime data is created from data/seed.json on first start.
 data/content.json

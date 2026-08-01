@@ -11,6 +11,7 @@ ExecStart=/usr/bin/node /opt/CodeStream/backend/server.js
 Environment=NODE_ENV=production
 Environment=HOST=127.0.0.1
 Environment=PORT=3020
+EnvironmentFile=/etc/codestream.env
 Restart=always
 RestartSec=3
 StandardOutput=journal

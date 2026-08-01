@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f5f0">
+    <meta name="description" content="登录 CodeStream 内容管理">
+    <title>CodeStream · 管理登录</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="login-card" aria-labelledby="loginTitle">
+        <a class="brand login-brand" href="/">
+          <span class="brand-mark">&lt;/&gt;</span>
+          <span>CodeStream</span>
+        </a>
+        <div class="login-heading">
+          <p class="eyebrow">ADMIN ACCESS</p>
+          <h1 id="loginTitle">进入内容管理</h1>
+          <p>登录后可以编辑目录、代码流和复习步骤。</p>
+        </div>
+        <form class="login-form" id="loginForm">
+          <label class="form-field">
+            <span>用户名</span>
+            <input name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+          </label>
+          <label class="form-field">
+            <span>密码</span>
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
+          <button class="primary-button login-submit" id="loginSubmit" type="submit">登录</button>
+        </form>
+        <a class="login-back" href="/">返回学习页</a>
+      </section>
+    </main>
+    <script src="/login.js" defer></script>
+  </body>
+</html>
