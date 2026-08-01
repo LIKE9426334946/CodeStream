@@ -44,6 +44,10 @@ test("seed data is created and returned on first start", async (t) => {
   assert.equal(data.schemaVersion, 1);
   assert.ok(data.directories.length >= 2);
   assert.equal(data.directories[0].name, "Bash");
+  const codeBlocks = data.directories.flatMap((directory) =>
+    directory.streams.flatMap((stream) => stream.blocks.filter((block) => block.type === "code"))
+  );
+  assert.ok(codeBlocks.every((block) => block.language === ""));
   assert.equal((await fs.stat(dataFile)).isFile(), true);
 });
 

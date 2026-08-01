@@ -199,8 +199,6 @@ function renderReader() {
       card.className = "code-card";
       const top = document.createElement("div");
       top.className = "code-card-top";
-      const language = document.createElement("span");
-      language.textContent = block.language || "code";
       const copy = document.createElement("button");
       copy.className = "copy-button";
       copy.type = "button";
@@ -214,7 +212,13 @@ function renderReader() {
           showToast("复制失败，请长按代码手动复制");
         }
       });
-      top.append(language, copy);
+      const languageLabel = (block.language || "").trim();
+      if (languageLabel) {
+        const language = document.createElement("span");
+        language.textContent = languageLabel;
+        top.append(language);
+      }
+      top.append(copy);
 
       const pre = document.createElement("pre");
       const code = document.createElement("code");

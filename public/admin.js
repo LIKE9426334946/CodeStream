@@ -205,11 +205,15 @@ function renderBlocks() {
     const badge = document.createElement("span");
     badge.className = `type-badge ${block.type}`;
     badge.textContent = block.type === "code" ? "CODE" : "NOTE";
-    const language = document.createElement("span");
-    language.className = "drag-hint";
-    language.style.margin = "0";
-    language.textContent = block.type === "code" ? (block.language || "code") : "说明文字";
-    top.append(badge, language);
+    top.append(badge);
+    const languageLabel = block.type === "code" ? (block.language || "").trim() : "说明文字";
+    if (languageLabel) {
+      const language = document.createElement("span");
+      language.className = "drag-hint";
+      language.style.margin = "0";
+      language.textContent = languageLabel;
+      top.append(language);
+    }
 
     const content = document.createElement(block.type === "code" ? "pre" : "p");
     content.textContent = block.content;
@@ -427,7 +431,7 @@ function openBlockDialog(block = null) {
           { value: "note", label: "说明文字" }
         ]
       },
-      { name: "language", label: "语言标签", value: block?.language || "bash", maxLength: 30, placeholder: "例如 bash、python、javascript" },
+      { name: "language", label: "语言标签", value: block?.language || "", maxLength: 30, placeholder: "例如 bash、python、javascript（可不填）" },
       { name: "content", label: "内容", type: "textarea", code: block?.type !== "note", value: block?.content, required: true, rows: 10, placeholder: "输入代码或复习说明" }
     ],
     onChange: (event) => {

@@ -15,7 +15,7 @@
             {
               "id": "block-git-pull",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "git pull"
             },
             {
@@ -27,25 +27,25 @@
             {
               "id": "block-git-status",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "git status"
             },
             {
               "id": "block-git-add",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "git add ."
             },
             {
               "id": "block-git-commit",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "git commit -m \"描述\""
             },
             {
               "id": "block-git-push",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "git push"
             }
           ]
@@ -58,31 +58,31 @@
             {
               "id": "block-cd-project",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "cd /opt/CodeStream"
             },
             {
               "id": "block-pull-main",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "git pull origin main"
             },
             {
               "id": "block-install-production",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "npm ci --omit=dev"
             },
             {
               "id": "block-restart-service",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "systemctl restart codestream"
             },
             {
               "id": "block-check-service",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "systemctl status codestream --no-pager"
             }
           ]
@@ -102,19 +102,19 @@
             {
               "id": "block-python-venv-create",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "python -m venv .venv"
             },
             {
               "id": "block-python-venv-enable",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "source .venv/bin/activate"
             },
             {
               "id": "block-python-pip-upgrade",
               "type": "code",
-              "language": "bash",
+              "language": "",
               "content": "python -m pip install --upgrade pip"
             },
             {
