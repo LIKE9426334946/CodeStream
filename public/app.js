@@ -362,6 +362,7 @@ elements.viewModeButton.addEventListener("click", async () => {
       { duration: 100, easing: "ease-out", fill: "forwards" }
     );
     await fadeOut.finished.catch(() => undefined);
+    fadeOut.cancel();
   }
 
   if (state.activeStreamId !== streamId) {
