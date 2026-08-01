@@ -2,7 +2,9 @@ const state = {
   data: null,
   activeDirectoryId: null,
   activeStreamId: null,
-  query: ""
+  query: "",
+  mergedView: false,
+  isSwitchingView: false
 };
 
 const STUDY_DATA_CACHE_KEY = "codestream:study-data:v1";
@@ -19,6 +21,7 @@ const elements = {
   readerTitle: document.querySelector("#readerTitle"),
   readerDescription: document.querySelector("#readerDescription"),
   stepCount: document.querySelector("#stepCount"),
+  viewModeButton: document.querySelector("#viewModeButton"),
   flowBlocks: document.querySelector("#flowBlocks"),
   backButton: document.querySelector("#backButton"),
   refreshButton: document.querySelector("#refreshButton"),
@@ -108,6 +111,7 @@ function renderDirectories() {
     button.addEventListener("click", () => {
       state.activeDirectoryId = directory.id;
       state.activeStreamId = null;
+      state.mergedView = false;
       state.query = "";
       elements.searchInput.value = "";
       elements.body.classList.remove("reader-open");
@@ -173,17 +177,40 @@ function renderReader() {
   const result = findStream(state.activeStreamId);
   elements.readerPanel.hidden = !result;
   elements.flowBlocks.replaceChildren();
+  elements.flowBlocks.classList.toggle("merged-view", Boolean(result && state.mergedView));
+  elements.viewModeButton.hidden = !result;
 
-  if (!result) return;
+  if (!result) {
+    elements.viewModeButton.textContent = "View";
+    elements.viewModeButton.setAttribute("aria-pressed", "false");
+    return;
+  }
 
   const { directory, stream } = result;
   elements.readerPath.textContent = `${directory.name}  /  代码流`;
   elements.readerTitle.textContent = stream.name;
   elements.readerDescription.textContent = stream.description || "按顺序复习下面的内容。";
   elements.stepCount.textContent = `${stream.blocks.length} 个步骤`;
+  elements.viewModeButton.hidden = !stream.blocks.length;
+  elements.viewModeButton.disabled = state.isSwitchingView;
+  elements.viewModeButton.textContent = state.mergedView ? "Cancel" : "View";
+  elements.viewModeButton.setAttribute("aria-pressed", String(state.mergedView));
+  elements.viewModeButton.setAttribute("aria-label", state.mergedView ? "恢复代码流视图" : "合并查看全部内容");
 
   if (!stream.blocks.length) {
     elements.flowBlocks.append(makeEmptyState("这个代码流还没有步骤。"));
+    return;
+  }
+
+  if (state.mergedView) {
+    const card = document.createElement("div");
+    card.className = "code-card merged-code-card";
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = stream.blocks.map((block) => block.content).join("\n\n");
+    pre.append(code);
+    card.append(pre);
+    elements.flowBlocks.append(card);
     return;
   }
 
@@ -234,6 +261,7 @@ function render() {
 function openStream(streamId, { updateHistory = true } = {}) {
   const result = findStream(streamId);
   if (!result) return;
+  if (state.activeStreamId !== streamId) state.mergedView = false;
   state.activeDirectoryId = result.directory.id;
   state.activeStreamId = streamId;
   elements.body.classList.add("reader-open");
@@ -248,6 +276,7 @@ function openStream(streamId, { updateHistory = true } = {}) {
 
 function closeReader({ updateHistory = true } = {}) {
   state.activeStreamId = null;
+  state.mergedView = false;
   elements.body.classList.remove("reader-open");
   if (updateHistory) history.pushState(null, "", location.pathname);
   render();
@@ -272,6 +301,7 @@ function applyData(data) {
     elements.body.classList.add("reader-open");
   } else if (state.activeStreamId && !findStream(state.activeStreamId)) {
     state.activeStreamId = null;
+    state.mergedView = false;
     elements.body.classList.remove("reader-open");
   } else if (!state.activeStreamId && window.matchMedia("(min-width: 900px)").matches) {
     state.activeStreamId = activeDirectory()?.streams[0]?.id || null;
@@ -314,6 +344,49 @@ elements.backButton.addEventListener("click", () => {
   else closeReader({ updateHistory: false });
 });
 elements.refreshButton.addEventListener("click", () => loadData({ notify: true }));
+elements.viewModeButton.addEventListener("click", async () => {
+  if (state.isSwitchingView || !findStream(state.activeStreamId)) return;
+
+  const streamId = state.activeStreamId;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canAnimate = !reduceMotion && typeof elements.flowBlocks.animate === "function";
+  state.isSwitchingView = true;
+  elements.viewModeButton.disabled = true;
+
+  if (canAnimate) {
+    const fadeOut = elements.flowBlocks.animate(
+      [
+        { opacity: 1, transform: "translateY(0)" },
+        { opacity: 0, transform: "translateY(-4px)" }
+      ],
+      { duration: 100, easing: "ease-out", fill: "forwards" }
+    );
+    await fadeOut.finished.catch(() => undefined);
+  }
+
+  if (state.activeStreamId !== streamId) {
+    state.isSwitchingView = false;
+    renderReader();
+    return;
+  }
+
+  state.mergedView = !state.mergedView;
+  renderReader();
+
+  if (canAnimate) {
+    const fadeIn = elements.flowBlocks.animate(
+      [
+        { opacity: 0, transform: "translateY(5px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ],
+      { duration: 190, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+    );
+    await fadeIn.finished.catch(() => undefined);
+  }
+
+  state.isSwitchingView = false;
+  elements.viewModeButton.disabled = false;
+});
 
 window.addEventListener("popstate", () => {
   const streamId = streamIdFromHash();
