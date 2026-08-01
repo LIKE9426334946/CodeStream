@@ -136,6 +136,66 @@ svg {
   height: 20px;
 }
 
+.refresh-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-color: rgba(102, 139, 121, 0.32);
+  border-radius: 50%;
+  color: var(--accent-dark);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(229, 238, 232, 0.9));
+  box-shadow:
+    0 7px 18px rgba(62, 89, 76, 0.11),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.refresh-button::before {
+  position: absolute;
+  z-index: -1;
+  inset: 4px;
+  border-radius: inherit;
+  background: radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.88), rgba(229, 238, 232, 0.22));
+  content: "";
+}
+
+.refresh-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(77, 112, 97, 0.48);
+  color: #3f6555;
+  background: linear-gradient(145deg, #fff, #e4eee7);
+  box-shadow:
+    0 9px 22px rgba(62, 89, 76, 0.15),
+    inset 0 1px 0 #fff;
+}
+
+.refresh-button:active {
+  transform: scale(0.94);
+}
+
+.refresh-button:focus-visible {
+  outline: 3px solid rgba(102, 139, 121, 0.2);
+  outline-offset: 3px;
+}
+
+.refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.refresh-button[hidden] {
+  display: none !important;
+}
+
+.refresh-button.is-refreshing svg {
+  animation: refresh-button-spin 720ms linear infinite;
+}
+
+@keyframes refresh-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .header-actions {
   display: flex;
   align-items: center;

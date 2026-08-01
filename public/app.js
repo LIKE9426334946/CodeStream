@@ -5,6 +5,8 @@ const state = {
   query: ""
 };
 
+const STUDY_DATA_CACHE_KEY = "codestream:study-data:v1";
+
 const elements = {
   body: document.body,
   directoryList: document.querySelector("#directoryList"),
@@ -24,6 +26,36 @@ const elements = {
 };
 
 let toastTimer;
+
+function isValidStudyData(data) {
+  return Boolean(
+    data &&
+    typeof data === "object" &&
+    Array.isArray(data.directories) &&
+    data.directories.every((directory) =>
+      directory &&
+      typeof directory === "object" &&
+      Array.isArray(directory.streams)
+    )
+  );
+}
+
+function loadCachedData() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STUDY_DATA_CACHE_KEY) || "null");
+    return isValidStudyData(data) ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCachedData(data) {
+  try {
+    localStorage.setItem(STUDY_DATA_CACHE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.warn("无法保存学习内容缓存", error);
+  }
+}
 
 function showToast(message) {
   window.clearTimeout(toastTimer);
@@ -205,6 +237,7 @@ function render() {
   renderDirectories();
   renderStreams();
   renderReader();
+  elements.refreshButton.hidden = Boolean(state.activeStreamId);
 }
 
 function openStream(streamId, { updateHistory = true } = {}) {
@@ -235,30 +268,37 @@ function streamIdFromHash() {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+function applyData(data) {
+  state.data = data;
+
+  if (!data.directories.some((directory) => directory.id === state.activeDirectoryId)) {
+    state.activeDirectoryId = data.directories[0]?.id || null;
+  }
+
+  const hashStreamId = streamIdFromHash();
+  if (hashStreamId && findStream(hashStreamId)) {
+    state.activeStreamId = hashStreamId;
+    elements.body.classList.add("reader-open");
+  } else if (state.activeStreamId && !findStream(state.activeStreamId)) {
+    state.activeStreamId = null;
+    elements.body.classList.remove("reader-open");
+  } else if (!state.activeStreamId && window.matchMedia("(min-width: 900px)").matches) {
+    state.activeStreamId = activeDirectory()?.streams[0]?.id || null;
+  }
+
+  render();
+}
+
 async function loadData({ notify = false } = {}) {
   elements.refreshButton.disabled = true;
+  elements.refreshButton.classList.add("is-refreshing");
   try {
     const response = await fetch("/api/data", { cache: "no-store" });
     if (!response.ok) throw new Error("无法读取内容");
     const data = await response.json();
-    state.data = data;
-
-    if (!data.directories.some((directory) => directory.id === state.activeDirectoryId)) {
-      state.activeDirectoryId = data.directories[0]?.id || null;
-    }
-
-    const hashStreamId = streamIdFromHash();
-    if (hashStreamId && findStream(hashStreamId)) {
-      state.activeStreamId = hashStreamId;
-      elements.body.classList.add("reader-open");
-    } else if (state.activeStreamId && !findStream(state.activeStreamId)) {
-      state.activeStreamId = null;
-      elements.body.classList.remove("reader-open");
-    } else if (!state.activeStreamId && window.matchMedia("(min-width: 900px)").matches) {
-      state.activeStreamId = activeDirectory()?.streams[0]?.id || null;
-    }
-
-    render();
+    if (!isValidStudyData(data)) throw new Error("服务器内容格式不正确");
+    saveCachedData(data);
+    applyData(data);
     if (notify) showToast("已经加载服务器上的最新内容");
   } catch (error) {
     console.error(error);
@@ -269,6 +309,7 @@ async function loadData({ notify = false } = {}) {
     }
   } finally {
     elements.refreshButton.disabled = false;
+    elements.refreshButton.classList.remove("is-refreshing");
   }
 }
 
@@ -292,4 +333,9 @@ window.addEventListener("popstate", () => {
   }
 });
 
-loadData();
+const cachedData = loadCachedData();
+if (cachedData) {
+  applyData(cachedData);
+} else {
+  loadData();
+}
