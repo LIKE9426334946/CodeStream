@@ -552,40 +552,6 @@ svg {
   text-transform: uppercase;
 }
 
-.copy-button {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  margin-left: auto;
-  padding: 0;
-  place-items: center;
-  border-radius: 9px;
-  color: #bdc7c1;
-  background: transparent;
-  cursor: pointer;
-  transition: 150ms ease;
-}
-
-.copy-button:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.copy-button:active {
-  transform: scale(0.92);
-}
-
-.copy-button.copied {
-  color: #9fd0af;
-  background: rgba(137, 193, 155, 0.1);
-}
-
-.copy-button svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-}
-
 .code-card pre {
   max-width: 100%;
   margin: 0;

@@ -83,36 +83,6 @@ function makeEmptyState(message) {
   return empty;
 }
 
-function setCopyButtonIcon(button, copied = false) {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("aria-hidden", "true");
-
-  if (copied) {
-    const check = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    check.setAttribute("d", "m5 12 4 4L19 6");
-    svg.append(check);
-  } else {
-    const back = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    back.setAttribute("x", "8");
-    back.setAttribute("y", "3");
-    back.setAttribute("width", "13");
-    back.setAttribute("height", "13");
-    back.setAttribute("rx", "3");
-    const front = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    front.setAttribute("x", "3");
-    front.setAttribute("y", "8");
-    front.setAttribute("width", "13");
-    front.setAttribute("height", "13");
-    front.setAttribute("rx", "3");
-    svg.append(back, front);
-  }
-
-  button.replaceChildren(svg);
-  button.setAttribute("aria-label", copied ? "复制成功" : "复制代码");
-  button.title = copied ? "复制成功" : "复制代码";
-}
-
 function renderDirectories() {
   elements.directoryList.replaceChildren();
 
@@ -227,38 +197,21 @@ function renderReader() {
     if (block.type === "code") {
       const card = document.createElement("div");
       card.className = "code-card";
-      const top = document.createElement("div");
-      top.className = "code-card-top";
-      const copy = document.createElement("button");
-      copy.className = "copy-button";
-      copy.type = "button";
-      setCopyButtonIcon(copy);
-      copy.addEventListener("click", async () => {
-        try {
-          await navigator.clipboard.writeText(block.content);
-          copy.classList.add("copied");
-          setCopyButtonIcon(copy, true);
-          window.setTimeout(() => {
-            copy.classList.remove("copied");
-            setCopyButtonIcon(copy);
-          }, 1200);
-        } catch {
-          showToast("复制失败，请长按代码手动复制");
-        }
-      });
       const languageLabel = (block.language || "").trim();
       if (languageLabel) {
+        const top = document.createElement("div");
+        top.className = "code-card-top";
         const language = document.createElement("span");
         language.textContent = languageLabel;
         top.append(language);
+        card.append(top);
       }
-      top.append(copy);
 
       const pre = document.createElement("pre");
       const code = document.createElement("code");
       code.textContent = block.content;
       pre.append(code);
-      card.append(top, pre);
+      card.append(pre);
       row.append(number, card);
     } else {
       const note = document.createElement("div");
