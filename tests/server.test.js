@@ -42,6 +42,12 @@ async function login(baseUrl, credentials = testAuth) {
   return { response, cookie: response.headers.get("set-cookie") };
 }
 
+function allBlocks(data) {
+  return data.directories.flatMap((directory) =>
+    directory.streams.flatMap((stream) => stream.blocks)
+  );
+}
+
 test("health endpoint reports the service status", async (t) => {
   const { baseUrl } = await startTestServer(t);
   const response = await fetch(`${baseUrl}/healthz`);
@@ -59,9 +65,7 @@ test("seed data is created and returned on first start", async (t) => {
   assert.equal(data.schemaVersion, 1);
   assert.ok(data.directories.length >= 2);
   assert.equal(data.directories[0].name, "Bash");
-  const codeBlocks = data.directories.flatMap((directory) =>
-    directory.streams.flatMap((stream) => stream.blocks.filter((block) => block.type === "code"))
-  );
+  const codeBlocks = allBlocks(data).filter((block) => block.type === "code");
   assert.ok(codeBlocks.every((block) => block.language === ""));
   assert.equal((await fs.stat(dataFile)).isFile(), true);
 });
@@ -130,6 +134,8 @@ test("logout expires the session cookie", async (t) => {
 test("updated directory order is persisted to JSON", async (t) => {
   const { baseUrl, dataFile } = await startTestServer(t);
   const initial = await (await fetch(`${baseUrl}/api/data`)).json();
+  const noteBlock = allBlocks(initial).find((block) => block.type === "note");
+  noteBlock.language = "修改代码";
   initial.directories.reverse();
   const { cookie } = await login(baseUrl);
 
@@ -144,6 +150,8 @@ test("updated directory order is persisted to JSON", async (t) => {
   assert.equal(response.status, 200);
   assert.equal(saved.directories[0].name, "Python");
   assert.equal(fileData.directories[0].name, "Python");
+  assert.equal(allBlocks(saved).find((block) => block.id === noteBlock.id).language, "修改代码");
+  assert.equal(allBlocks(fileData).find((block) => block.id === noteBlock.id).language, "修改代码");
   assert.match(saved.updatedAt, /^\d{4}-\d{2}-\d{2}T/);
 });
 

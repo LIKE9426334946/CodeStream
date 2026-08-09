@@ -288,13 +288,13 @@ function renderBlocks() {
     badge.className = `type-badge ${block.type}`;
     badge.textContent = block.type === "code" ? "CODE" : "NOTE";
     top.append(badge);
-    const languageLabel = block.type === "code" ? (block.language || "").trim() : "说明文字";
-    if (languageLabel) {
-      const language = document.createElement("span");
-      language.className = "drag-hint";
-      language.style.margin = "0";
-      language.textContent = languageLabel;
-      top.append(language);
+    const descriptionLabel = (block.language || "").trim() || (block.type === "note" ? "说明文字" : "");
+    if (descriptionLabel) {
+      const description = document.createElement("span");
+      description.className = "drag-hint";
+      description.style.margin = "0";
+      description.textContent = descriptionLabel;
+      top.append(description);
     }
 
     const content = document.createElement(block.type === "code" ? "pre" : "p");
@@ -491,10 +491,8 @@ function openStreamDialog(stream = null) {
   });
 }
 
-function toggleLanguageField() {
+function syncBlockTypeField() {
   const type = elements.dialogFields.querySelector('[name="type"]')?.value;
-  const languageField = elements.dialogFields.querySelector('[data-field="language"]');
-  if (languageField) languageField.hidden = type !== "code";
   const content = elements.dialogFields.querySelector('[name="content"]');
   content?.classList.toggle("code-input", type === "code");
 }
@@ -516,22 +514,22 @@ function openBlockDialog(block = null) {
           { value: "note", label: "说明文字" }
         ]
       },
-      { name: "language", label: "语言标签", value: block?.language || "", maxLength: 30, placeholder: "例如 bash、python、javascript（可不填）" },
+      { name: "language", label: "说明", value: block?.language || "", maxLength: 30, placeholder: "例如：创建虚拟环境、修改代码（可不填）" },
       { name: "content", label: "内容", type: "textarea", code: block?.type !== "note", value: block?.content, required: true, rows: 10, placeholder: "输入代码或复习说明" }
     ],
     onChange: (event) => {
-      if (event.target.name === "type") toggleLanguageField();
+      if (event.target.name === "type") syncBlockTypeField();
     },
     onSave: async ({ type, language, content }) => {
       if (block) {
         block.type = type;
-        block.language = type === "code" ? language.trim() : "";
+        block.language = language.trim();
         block.content = content;
       } else {
         stream.blocks.push({
           id: newId("block"),
           type,
-          language: type === "code" ? language.trim() : "",
+          language: language.trim(),
           content
         });
       }
@@ -539,7 +537,7 @@ function openBlockDialog(block = null) {
       persist();
     }
   });
-  toggleLanguageField();
+  syncBlockTypeField();
 }
 
 function deleteDirectory(directory) {

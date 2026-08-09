@@ -220,17 +220,17 @@ function renderReader() {
     const number = document.createElement("span");
     number.className = "flow-index";
     number.textContent = String(index + 1).padStart(2, "0");
+    const descriptionLabel = (block.language || "").trim();
 
     if (block.type === "code") {
       const card = document.createElement("div");
       card.className = "code-card";
-      const languageLabel = (block.language || "").trim();
-      if (languageLabel) {
+      if (descriptionLabel) {
         const top = document.createElement("div");
         top.className = "code-card-top";
-        const language = document.createElement("span");
-        language.textContent = languageLabel;
-        top.append(language);
+        const description = document.createElement("span");
+        description.textContent = descriptionLabel;
+        top.append(description);
         card.append(top);
       }
 
@@ -243,7 +243,16 @@ function renderReader() {
     } else {
       const note = document.createElement("div");
       note.className = "note-card";
-      note.textContent = block.content;
+      if (descriptionLabel) {
+        const description = document.createElement("span");
+        description.className = "note-card-label";
+        description.textContent = descriptionLabel;
+        note.append(description);
+      }
+      const content = document.createElement("span");
+      content.className = "note-card-content";
+      content.textContent = block.content;
+      note.append(content);
       row.append(number, note);
     }
 

@@ -642,6 +642,19 @@ svg {
   white-space: pre-wrap;
 }
 
+.note-card-label,
+.note-card-content {
+  display: block;
+}
+
+.note-card-label {
+  margin-bottom: 7px;
+  color: var(--accent-dark);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.04em;
+}
+
 .empty-state {
   padding: 32px 20px;
   border: 1px dashed var(--line-strong);
