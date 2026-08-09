@@ -109,6 +109,9 @@ test("successful login creates a 30-day session and unlocks admin", async (t) =>
   const adminResponse = await fetch(`${baseUrl}/admin`, { headers: { Cookie: cookie } });
   const statusResponse = await fetch(`${baseUrl}/api/auth/status`, { headers: { Cookie: cookie } });
   assert.equal(adminResponse.status, 200);
+  const adminHtml = await adminResponse.text();
+  assert.match(adminHtml, /id="adminViewButton"/);
+  assert.match(adminHtml, /id="adminCopyButton"/);
   assert.deepEqual(await statusResponse.json(), { authenticated: true, username: "noart" });
 });
 

@@ -2,6 +2,8 @@ const state = {
   data: null,
   activeDirectoryId: null,
   activeStreamId: null,
+  mergedView: false,
+  isSwitchingView: false,
   saveVersion: 0,
   saveQueue: Promise.resolve()
 };
@@ -17,6 +19,9 @@ const elements = {
   addStream: document.querySelector("#addStreamButton"),
   addBlock: document.querySelector("#addBlockButton"),
   editStream: document.querySelector("#editStreamButton"),
+  viewButton: document.querySelector("#adminViewButton"),
+  copyButton: document.querySelector("#adminCopyButton"),
+  blockHint: document.querySelector("#adminBlockHint"),
   saveStatus: document.querySelector("#saveStatus"),
   exportButton: document.querySelector("#exportButton"),
   importButton: document.querySelector("#importButton"),
@@ -31,6 +36,9 @@ const elements = {
 };
 
 let toastTimer;
+let copyResetTimer;
+
+const defaultBlockHint = "代码和说明可以混合排列，保存后手机端立即可刷新查看";
 
 function handleExpiredSession(response) {
   if (response.status !== 401) return false;
@@ -56,6 +64,47 @@ function activeDirectory() {
 
 function activeStream() {
   return activeDirectory()?.streams.find((stream) => stream.id === state.activeStreamId) || null;
+}
+
+function mergedContent(stream) {
+  return stream?.blocks.map((block) => block.content).join("\n\n") || "";
+}
+
+function resetCopyButton() {
+  window.clearTimeout(copyResetTimer);
+  elements.copyButton.textContent = "Copy";
+  elements.copyButton.disabled = false;
+}
+
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Public HTTP pages may not be allowed to use the Clipboard API.
+    }
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.setAttribute("aria-hidden", "true");
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "-9999px";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  textarea.focus();
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } finally {
+    textarea.remove();
+  }
+  if (!copied) throw new Error("浏览器不允许访问剪贴板");
 }
 
 function emptyState(message) {
@@ -125,6 +174,7 @@ function renderDirectories() {
       subtitle: `${directory.streams.length} 个代码流`,
       selected: directory.id === state.activeDirectoryId,
       onSelect: () => {
+        state.mergedView = false;
         state.activeDirectoryId = directory.id;
         state.activeStreamId = directory.streams[0]?.id || null;
         renderAll();
@@ -163,6 +213,7 @@ function renderStreams() {
       subtitle: `${stream.blocks.length} 个步骤`,
       selected: stream.id === state.activeStreamId,
       onSelect: () => {
+        if (state.activeStreamId !== stream.id) state.mergedView = false;
         state.activeStreamId = stream.id;
         renderAll();
       },
@@ -179,9 +230,21 @@ function renderStreams() {
 
 function renderBlocks() {
   const stream = activeStream();
+  if (!state.mergedView && elements.copyButton.textContent !== "Copy") resetCopyButton();
   elements.blockList.replaceChildren();
+  elements.blockList.classList.toggle("admin-merged-view", Boolean(stream && state.mergedView));
   elements.addBlock.disabled = !stream;
   elements.editStream.disabled = !stream;
+  elements.viewButton.hidden = !stream?.blocks.length;
+  elements.viewButton.disabled = state.isSwitchingView;
+  elements.viewButton.textContent = state.mergedView ? "Cancel" : "View";
+  elements.viewButton.setAttribute("aria-pressed", String(state.mergedView));
+  elements.viewButton.setAttribute("aria-label", state.mergedView ? "恢复步骤编辑视图" : "合并查看全部内容");
+  elements.copyButton.hidden = !stream?.blocks.length || !state.mergedView;
+  elements.copyButton.disabled = state.isSwitchingView;
+  elements.blockHint.textContent = state.mergedView
+    ? "所有代码和说明已按原顺序合并，语言标签不会显示"
+    : defaultBlockHint;
   elements.blockTitle.textContent = stream?.name || "选择代码流";
   elements.blockDescription.textContent = stream?.description || "选择左侧代码流后，在这里编辑具体步骤。";
 
@@ -192,6 +255,18 @@ function renderBlocks() {
 
   if (!stream.blocks.length) {
     elements.blockList.append(emptyState("还没有步骤。可以添加代码或说明，并自由混合排序。"));
+    return;
+  }
+
+  if (state.mergedView) {
+    const card = document.createElement("div");
+    card.className = "code-card merged-code-card admin-merged-code-card";
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = mergedContent(stream);
+    pre.append(code);
+    card.append(pre);
+    elements.blockList.append(card);
     return;
   }
 
@@ -253,6 +328,7 @@ function renderAll() {
   const directory = activeDirectory();
   if (!directory?.streams.some((stream) => stream.id === state.activeStreamId)) {
     state.activeStreamId = directory?.streams[0]?.id || null;
+    state.mergedView = false;
   }
 
   renderDirectories();
@@ -384,6 +460,7 @@ function openDirectoryDialog(directory = null) {
         state.data.directories.push(item);
         state.activeDirectoryId = item.id;
         state.activeStreamId = null;
+        state.mergedView = false;
       }
       renderAll();
       persist();
@@ -406,6 +483,7 @@ function openStreamDialog(stream = null) {
         const item = { id: newId("stream"), name: name.trim(), description: description.trim(), blocks: [] };
         directory.streams.push(item);
         state.activeStreamId = item.id;
+        state.mergedView = false;
       }
       renderAll();
       persist();
@@ -469,6 +547,7 @@ function deleteDirectory(directory) {
   state.data.directories = state.data.directories.filter((item) => item.id !== directory.id);
   state.activeDirectoryId = state.data.directories[0]?.id || null;
   state.activeStreamId = activeDirectory()?.streams[0]?.id || null;
+  state.mergedView = false;
   renderAll();
   persist();
 }
@@ -478,6 +557,7 @@ function deleteStream(stream) {
   const directory = activeDirectory();
   directory.streams = directory.streams.filter((item) => item.id !== stream.id);
   state.activeStreamId = directory.streams[0]?.id || null;
+  state.mergedView = false;
   renderAll();
   persist();
 }
@@ -525,6 +605,7 @@ async function loadData() {
     state.data = await response.json();
     state.activeDirectoryId = state.data.directories[0]?.id || null;
     state.activeStreamId = activeDirectory()?.streams[0]?.id || null;
+    state.mergedView = false;
     elements.saveStatus.textContent = "已载入";
     renderAll();
   } catch (error) {
@@ -540,6 +621,72 @@ elements.addBlock.addEventListener("click", () => openBlockDialog());
 elements.editStream.addEventListener("click", () => {
   const stream = activeStream();
   if (stream) openStreamDialog(stream);
+});
+
+elements.viewButton.addEventListener("click", async () => {
+  const stream = activeStream();
+  if (!stream?.blocks.length || state.isSwitchingView) return;
+
+  const streamId = stream.id;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canAnimate = !reduceMotion && typeof elements.blockList.animate === "function";
+  state.isSwitchingView = true;
+  elements.viewButton.disabled = true;
+  elements.copyButton.disabled = true;
+
+  if (canAnimate) {
+    const fadeOut = elements.blockList.animate(
+      [
+        { opacity: 1, transform: "translateY(0)" },
+        { opacity: 0, transform: "translateY(-4px)" }
+      ],
+      { duration: 100, easing: "ease-out", fill: "forwards" }
+    );
+    await fadeOut.finished.catch(() => undefined);
+    fadeOut.cancel();
+  }
+
+  if (activeStream()?.id !== streamId) {
+    state.isSwitchingView = false;
+    renderBlocks();
+    return;
+  }
+
+  state.mergedView = !state.mergedView;
+  resetCopyButton();
+  renderBlocks();
+
+  if (canAnimate) {
+    const fadeIn = elements.blockList.animate(
+      [
+        { opacity: 0, transform: "translateY(5px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ],
+      { duration: 190, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+    );
+    await fadeIn.finished.catch(() => undefined);
+  }
+
+  state.isSwitchingView = false;
+  elements.viewButton.disabled = false;
+  elements.copyButton.disabled = false;
+});
+
+elements.copyButton.addEventListener("click", async () => {
+  const stream = activeStream();
+  if (!state.mergedView || !stream?.blocks.length) return;
+
+  elements.copyButton.disabled = true;
+  try {
+    await copyText(mergedContent(stream));
+    elements.copyButton.textContent = "Copied";
+    showToast("全部内容已复制");
+    copyResetTimer = window.setTimeout(resetCopyButton, 1400);
+  } catch (error) {
+    console.error(error);
+    elements.copyButton.disabled = false;
+    showToast("复制失败，请手动选择代码内容");
+  }
 });
 
 elements.exportButton.addEventListener("click", () => {
@@ -574,6 +721,7 @@ elements.importInput.addEventListener("change", async () => {
     state.data = result;
     state.activeDirectoryId = result.directories[0]?.id || null;
     state.activeStreamId = activeDirectory()?.streams[0]?.id || null;
+    state.mergedView = false;
     renderAll();
     elements.saveStatus.textContent = "已保存";
     showToast("备份导入成功");

@@ -60,11 +60,13 @@
             <p id="adminBlockDescription"></p>
           </div>
           <div class="block-actions">
+            <button class="secondary-button admin-copy-button" id="adminCopyButton" type="button" hidden>Copy</button>
+            <button class="secondary-button admin-view-button" id="adminViewButton" type="button" aria-pressed="false" hidden>View</button>
             <button class="secondary-button" id="editStreamButton" type="button">修改信息</button>
             <button class="primary-button" id="addBlockButton" type="button">新增步骤</button>
           </div>
         </div>
-        <p class="drag-hint">代码和说明可以混合排列，保存后手机端立即可刷新查看</p>
+        <p class="drag-hint" id="adminBlockHint">代码和说明可以混合排列，保存后手机端立即可刷新查看</p>
         <div class="sortable-list block-sortable-list" id="adminBlockList"></div>
       </section>
     </main>

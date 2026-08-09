@@ -1015,8 +1015,53 @@ svg {
   gap: 8px;
 }
 
+.block-actions [hidden] {
+  display: none !important;
+}
+
+.admin-view-button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: #fff;
+  background: var(--accent);
+}
+
+.admin-copy-button {
+  border-color: #a9beb2;
+  color: var(--accent-dark);
+  background: var(--accent-pale);
+}
+
+.admin-copy-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.admin-copy-button:disabled,
+.admin-view-button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
 .block-sortable-list {
   max-width: 900px;
+}
+
+.block-sortable-list.admin-merged-view {
+  display: block;
+}
+
+.admin-merged-code-card {
+  width: 100%;
+  border-radius: 18px;
+}
+
+.admin-merged-code-card pre {
+  min-height: 360px;
+  max-height: calc(100vh - 285px);
+  padding: 25px 27px 29px;
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.85;
 }
 
 .block-item {
