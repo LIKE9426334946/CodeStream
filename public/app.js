@@ -68,6 +68,72 @@ function showToast(message) {
   toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 2200);
 }
 
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall back when clipboard access is unavailable or denied.
+    }
+  }
+
+  const previousFocus = document.activeElement;
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.style.position = "fixed";
+  textarea.style.top = "0";
+  textarea.style.left = "-9999px";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  let copied = false;
+  try {
+    textarea.focus({ preventScroll: true });
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    copied = document.execCommand("copy");
+  } finally {
+    textarea.remove();
+    previousFocus?.focus({ preventScroll: true });
+  }
+  if (!copied) throw new Error("浏览器不允许访问剪贴板");
+}
+
+function makeCodeHeader(descriptionLabel, content) {
+  const top = document.createElement("div");
+  top.className = "code-card-top";
+  if (descriptionLabel) {
+    const description = document.createElement("span");
+    description.textContent = descriptionLabel;
+    top.append(description);
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "study-copy-button";
+  button.textContent = "Copy";
+  button.setAttribute("aria-label", "复制代码框内容");
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      await copyText(content);
+      button.textContent = "Copied";
+      showToast("代码框内容已复制");
+      window.setTimeout(() => {
+        button.textContent = "Copy";
+        button.disabled = false;
+      }, 1400);
+    } catch (error) {
+      console.error(error);
+      button.disabled = false;
+      showToast("复制失败，请手动选择代码内容");
+    }
+  });
+  top.append(button);
+  return top;
+}
+
 function activeDirectory() {
   return state.data?.directories.find((directory) => directory.id === state.activeDirectoryId) || null;
 }
@@ -206,11 +272,12 @@ function renderReader() {
   if (state.mergedView) {
     const card = document.createElement("div");
     card.className = "code-card merged-code-card";
+    const content = stream.blocks.map((block) => block.content).join("\n\n");
     const pre = document.createElement("pre");
     const code = document.createElement("code");
-    code.textContent = stream.blocks.map((block) => block.content).join("\n\n");
+    code.textContent = content;
     pre.append(code);
-    card.append(pre);
+    card.append(makeCodeHeader("", content), pre);
     elements.flowBlocks.append(card);
     return;
   }
@@ -226,14 +293,7 @@ function renderReader() {
     if (block.type === "code") {
       const card = document.createElement("div");
       card.className = "code-card";
-      if (descriptionLabel) {
-        const top = document.createElement("div");
-        top.className = "code-card-top";
-        const description = document.createElement("span");
-        description.textContent = descriptionLabel;
-        top.append(description);
-        card.append(top);
-      }
+      card.append(makeCodeHeader(descriptionLabel, block.content));
 
       const pre = document.createElement("pre");
       const code = document.createElement("code");

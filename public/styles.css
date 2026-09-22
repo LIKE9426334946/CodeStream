@@ -616,6 +616,49 @@ svg {
   letter-spacing: 0.08em;
 }
 
+.study-page .code-card-top {
+  min-height: 44px;
+  gap: 12px;
+}
+
+.study-page .code-card-top > span {
+  min-width: 0;
+  padding-block: 8px;
+  overflow-wrap: anywhere;
+}
+
+.study-copy-button {
+  flex-shrink: 0;
+  min-width: 64px;
+  min-height: 32px;
+  margin-left: auto;
+  padding: 5px 10px;
+  border: 1px solid #63756b;
+  border-radius: 8px;
+  color: #dce9e1;
+  background: rgba(220, 233, 225, 0.06);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.study-copy-button:hover {
+  border-color: #92b19e;
+  background: rgba(220, 233, 225, 0.14);
+}
+
+.study-copy-button:focus-visible {
+  outline: 2px solid #bdd8c6;
+  outline-offset: 2px;
+}
+
+.study-copy-button:disabled {
+  cursor: default;
+  color: #b9d8c4;
+}
+
 .code-card pre {
   max-width: 100%;
   margin: 0;
