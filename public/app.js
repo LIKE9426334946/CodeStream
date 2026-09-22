@@ -29,6 +29,7 @@ const elements = {
 };
 
 let toastTimer;
+let isLoadingData = false;
 
 function isValidStudyData(data) {
   return Boolean(
@@ -264,7 +265,7 @@ function render() {
   renderDirectories();
   renderStreams();
   renderReader();
-  elements.refreshButton.hidden = Boolean(state.activeStreamId);
+  elements.refreshButton.hidden = Boolean(state.activeStreamId) && !window.matchMedia("(min-width: 900px)").matches;
 }
 
 function openStream(streamId, { updateHistory = true } = {}) {
@@ -305,7 +306,9 @@ function applyData(data) {
   }
 
   const hashStreamId = streamIdFromHash();
-  if (hashStreamId && findStream(hashStreamId)) {
+  const hashStream = hashStreamId && findStream(hashStreamId);
+  if (hashStream) {
+    state.activeDirectoryId = hashStream.directory.id;
     state.activeStreamId = hashStreamId;
     elements.body.classList.add("reader-open");
   } else if (state.activeStreamId && !findStream(state.activeStreamId)) {
@@ -320,6 +323,8 @@ function applyData(data) {
 }
 
 async function loadData({ notify = false } = {}) {
+  if (isLoadingData) return;
+  isLoadingData = true;
   elements.refreshButton.disabled = true;
   elements.refreshButton.classList.add("is-refreshing");
   try {
@@ -328,16 +333,17 @@ async function loadData({ notify = false } = {}) {
     const data = await response.json();
     if (!isValidStudyData(data)) throw new Error("服务器内容格式不正确");
     saveCachedData(data);
-    applyData(data);
+    if (JSON.stringify(state.data) !== JSON.stringify(data)) applyData(data);
     if (notify) showToast("已经加载服务器上的最新内容");
   } catch (error) {
     console.error(error);
-    showToast("内容加载失败，请稍后重试");
+    showToast(state.data ? "更新失败，当前显示之前加载的内容，请稍后刷新" : "内容加载失败，请稍后重试");
     if (!state.data) {
       state.data = { schemaVersion: 1, directories: [] };
       render();
     }
   } finally {
+    isLoadingData = false;
     elements.refreshButton.disabled = false;
     elements.refreshButton.classList.remove("is-refreshing");
   }
@@ -410,6 +416,16 @@ window.addEventListener("popstate", () => {
 const cachedData = loadCachedData();
 if (cachedData) {
   applyData(cachedData);
-} else {
-  loadData();
 }
+loadData();
+
+function refreshVisibleData() {
+  if (document.visibilityState === "visible") loadData();
+}
+
+window.addEventListener("focus", refreshVisibleData);
+window.addEventListener("online", refreshVisibleData);
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) refreshVisibleData();
+});
+document.addEventListener("visibilitychange", refreshVisibleData);
